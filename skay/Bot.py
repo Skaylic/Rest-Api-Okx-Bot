@@ -95,7 +95,6 @@ class Bot(Okx):
                     self.to_buy = 0
                     logger.info(f"{strftime('%d.%m.%Y %H:%M:%S')}: Order: {pos}, MarkPx: {self.kline['close']}, GridPx: {self.grid_px}")
                 if pos and self.balance[self.baseCcy] > pos.sz and self.order is None:
-                    print(pos.sz - round(pos.fee, 2))
                     self.sendTicker(side='sell', qty=pos.sz - round(pos.fee, 2))
                 elif pos and self.balance[self.baseCcy] < pos.sz and self.order is None:
                     self.sendTicker(side='buy', tag=strftime('%Y%m%d%H%M%S'))
