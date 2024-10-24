@@ -41,11 +41,11 @@ class Bot(Okx):
 
     def is_position(self):
         mrx = float(self.kline['close'] - (self.kline['close'] * self.percent / 100))
-        _ord = (db.query(Orders).filter(Orders.side == 'Buy', Orders.px <= mrx, Orders.is_active == True)
+        _ord = (db.query(Orders).filter(Orders.side == 'buy', Orders.px <= mrx, Orders.is_active == True)
                 .order_by(Orders.px).first())
         if _ord:
             return _ord
-        _ord = db.query(Orders).filter(Orders.side == 'Buy', Orders.grid_px == self.grid_px,
+        _ord = db.query(Orders).filter(Orders.side == 'buy', Orders.grid_px == self.grid_px,
                                        Orders.is_active == True).first()
         if _ord:
             return None
