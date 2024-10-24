@@ -66,7 +66,7 @@ class Okx:
                 self.balance[self.quoteCcy] = float(i['cashBal'])
         return self
 
-    def sendTicker(self, qty: float, side="buy", tag='Bot3'):
+    def sendTicker(self, qty: float, side="buy", tag='Bot'):
         res = TradeAPI(**self.params).place_order(
             instId=self.symbol,
             tdMode="cash",
@@ -79,6 +79,7 @@ class Okx:
         )
         data = self.getResponse(res)
         self.orderId = data['ordId']
+        self.getOrderDetails()
         return self
 
     def getOrderDetails(self):

@@ -26,6 +26,7 @@ class Bot(Okx):
     def check(self):
         if not self.instruments:
             self.getInstruments()
+        self.getBalance()
         self.getKline()
         self.grid_positions()
 
@@ -41,11 +42,11 @@ class Bot(Okx):
 
     def is_position(self):
         mrx = float(self.kline['close'] - (self.kline['close'] * self.percent / 100))
-        _ord = (db.query(Orders).filter(Orders.side == 'buy', Orders.px <= mrx, Orders.is_active == True)
+        _ord = (db.query(Orders).filter(Orders.side == 'Buy', Orders.px <= mrx, Orders.is_active == True)
                 .order_by(Orders.px).first())
         if _ord:
             return _ord
-        _ord = db.query(Orders).filter(Orders.side == 'buy', Orders.grid_px == self.grid_px,
+        _ord = db.query(Orders).filter(Orders.side == 'Buy', Orders.grid_px == self.grid_px,
                                        Orders.is_active == True).first()
         if _ord:
             return None
@@ -53,8 +54,14 @@ class Bot(Okx):
             return False
 
     def check_qty(self):
+        if self.balance[self.quoteCcy] < 200:
+            self.qty = float(os.getenv('QTY')) / 2
+        if 200 < self.balance[self.quoteCcy] < 500:
+            self.qty = float(os.getenv('QTY'))
+        if self.balance[self.quoteCcy] > 500:
+            self.qty = float(os.getenv('QTY')) * 2
         if self.qty / self.kline['close'] < self.min_qty:
-            self.qty = self.min_qty * self.kline['close']
+            self.qty = round(self.min_qty * self.kline['close']) + 1
         return self
 
     def save_order(self, order, active=True):
@@ -96,12 +103,17 @@ class Bot(Okx):
                     logger.info(f"{strftime('%d.%m.%Y %H:%M:%S')}: Order: {pos}, MarkPx: {self.kline['close']}, GridPx: {self.grid_px}")
                 if pos and self.balance[self.baseCcy] > pos.sz and self.order is None:
                     self.sendTicker(side='sell', qty=pos.sz - round(pos.fee, 2))
+                    self.getBalance()
                 elif pos and self.balance[self.baseCcy] < pos.sz and self.order is None:
-                    self.sendTicker(side='buy', tag=strftime('%Y%m%d%H%M%S'))
+                    self.check_qty()
+                    self.sendTicker(side='buy', qty=self.qty, tag=strftime('%Y%m%d%H%M%S'))
+                    self.getBalance()
                 elif (pos is False and self.to_buy == 1 and self.kline['close'] > self.position_px and
                       self.balance[self.quoteCcy] > self.qty and self.order is None):
+                    self.check_qty()
                     self.position_px = self.grid_px
-                    self.sendTicker(side='buy')
+                    self.sendTicker(side='buy', qty=self.qty)
+                    self.getBalance()
                 if self.order and self.order['orderId'] == self.orderId:
                     if self.order['tag'] == self.bot_mane and self.order['side'] == "sell":
                         self.save_order(self.order, active=False)
