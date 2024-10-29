@@ -42,8 +42,7 @@ class Bot(Okx):
         return self
 
     def is_position(self):
-        mrx = float(self.kline['close'] - (self.kline['close'] * self.percent / 100))
-        _ord = (db.query(Orders).filter(Orders.px < mrx, Orders.is_active == True)
+        _ord = (db.query(Orders).filter(Orders.profit < self.kline['close'], Orders.is_active == True)
                 .order_by(Orders.px).first())
         if _ord:
             return _ord
@@ -124,7 +123,8 @@ class Bot(Okx):
                         pos.is_active = False
                         db.commit()
                     elif self.order['side'] == "buy" and self.order['tag'] == self.bot_mane:
-                        self.order['sz'] = self.order['sz'] + self.order['fee']
+                        self.order['fillSz'] = self.order['fillSz'] + self.order['fee']
+                        self.order['profit'] = self.order['fillPx'] + (self.order['fillPx'] * self.percent / 100)
                         self.save_order(self.order, active=True)
                         self.orderId = None
                         self.order = None
