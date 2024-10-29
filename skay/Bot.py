@@ -123,8 +123,8 @@ class Bot(Okx):
                         pos.is_active = False
                         db.commit()
                     elif self.order['side'] == "buy" and self.order['tag'] == self.bot_mane:
-                        self.order['fillSz'] = self.order['fillSz'] + self.order['fee']
-                        self.order['profit'] = self.order['fillPx'] + (self.order['fillPx'] * self.percent / 100)
+                        self.order['fillSz'] = float(self.order['fillSz']) + float(self.order['fee'])
+                        self.order['profit'] = float(self.order['fillPx']) + (float(self.order['fillPx']) * self.percent / 100)
                         self.save_order(self.order, active=True)
                         self.orderId = None
                         self.order = None
